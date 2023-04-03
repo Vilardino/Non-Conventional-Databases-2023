@@ -1,6 +1,13 @@
 # Non-Conventional-Databases-2023
 
-Repositório referente a materia de banco de dados não convencionais na Ufscar
+Repositório referente a materia de banco de dados não convencionais na Ufscar junto à professora Dra Marilde Santos
+
+#### Colaboradores: 
+
+| Nome | Pagina do Github |
+|:----:|:----------------:|
+| Guilherme Balduino | [Perfil](https://github.com/Vilardino) |
+| Paulo Morais | [Perfil](https://github.com/pauloeng28) |
 
 ## Resumo
 
