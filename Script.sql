@@ -1,3 +1,5 @@
+CREATE EXTENSION postgis;
+
 drop function IF EXISTS encontra_cidade;
 drop function IF EXISTS encontra_ponto_por_cidade;
 drop function IF EXISTS confere_ponto_cidade;
