@@ -1,8 +1,10 @@
 CREATE EXTENSION postgis;
 
+
 drop function IF EXISTS encontra_cidade;
 drop function IF EXISTS encontra_ponto_por_cidade;
 drop function IF EXISTS confere_ponto_cidade;
+
 
 drop procedure IF EXISTS atualiza_descricao_Imagem;
 drop procedure IF EXISTS insere_bolsista;
@@ -15,6 +17,7 @@ drop procedure IF EXISTS MembrosExterno;
 drop procedure IF EXISTS MembrosInterno;
 drop procedure IF EXISTS insere_Imagem;
 drop procedure IF EXISTS insere_orthomosaico;
+
 
 drop TABLE IF EXISTS Imagem;
 drop TABLE IF EXISTS MembrosInterno;
@@ -30,6 +33,7 @@ drop TABLE IF EXISTS Usuario;
 drop type IF EXISTS nome;
 drop type IF EXISTS Orientado;
 
+
 -- Foram criados tipos compostos de dados
 CREATE type Nome as (
         preNome varchar(20),
@@ -37,20 +41,25 @@ CREATE type Nome as (
     );
    
 
+
 CREATE type Orientado as(
+
 
     inicio date,
     fim date,
     orientador char(11)
 
+
 );
+
 
 -- Base para todos os usuários
 CREATE TABLE IF NOT EXISTS Usuario(
         CPF char(11) PRIMARY KEY,
         nome Nome NOT NULL,
         email varchar(50) NULL
-);	
+);  
+
 
 -- Usuário presente no projeto
 CREATE TABLE IF NOT EXISTS MembrosInterno(
@@ -59,6 +68,7 @@ CREATE TABLE IF NOT EXISTS MembrosInterno(
     FOREIGN KEY (CPF) REFERENCES Usuario (CPF)
 );
 
+
 -- Usuário que observa de fora do projeto
 CREATE TABLE IF NOT EXISTS MembrosExterno(
     idUserExterno serial PRIMARY KEY,
@@ -66,14 +76,16 @@ CREATE TABLE IF NOT EXISTS MembrosExterno(
     FOREIGN KEY (CPF) REFERENCES Usuario (CPF)
 );
 
+
 -- Usuários responsaveis pela pesquisa
 CREATE TABLE IF NOT EXISTS Pesquisador (
         titulaçao varchar(30) NOT NULL,
         lattes varchar(256) NOT NULL,
         CPF char(11) PRIMARY KEY NOT NULL,
         FOREIGN KEY (CPF) REFERENCES Usuario (CPF)
-    
+   
 );
+
 
 -- Colaboradores subordinados aos pesquisadores
 CREATE TABLE IF NOT EXISTS bolsista (
@@ -81,6 +93,7 @@ CREATE TABLE IF NOT EXISTS bolsista (
     CPF char(11) PRIMARY KEY NOT NULL,
     FOREIGN KEY (CPF) REFERENCES Usuario (CPF)
 );
+
 
 -- Tabela para armazenar as cameras do projeto
 CREATE TABLE IF NOT EXISTS camera(
@@ -94,6 +107,8 @@ CREATE TABLE IF NOT EXISTS camera(
 );
 
 
+
+
 -- Tabela para armazenar informaçoes dos locais que foram feitos os voos
 CREATE TABLE IF NOT EXISTS "LocalVoo"(
     cnpj char(14) PRIMARY KEY,
@@ -101,6 +116,8 @@ CREATE TABLE IF NOT EXISTS "LocalVoo"(
     campanha varchar NOT NULL,
     "dataDaCampanha" timestamp NOT NULL
 );
+
+
 
 
 -- Tabela para armazenar informaçoes dos planos de voo
@@ -113,6 +130,7 @@ CREATE TABLE IF NOT EXISTS "PlanoDeVoo"(
     cnpj char(14) REFERENCES "LocalVoo"(CNPJ)
 );
 
+
 -- Tabela para armazenar orthomosaicos criados
 CREATE TABLE IF NOT EXISTS orthomosaico(
     idOrthomosaico serial PRIMARY KEY,
@@ -121,17 +139,19 @@ CREATE TABLE IF NOT EXISTS orthomosaico(
     descricao varchar(256) NULL
 );
 
+
 -- Tabela para armazenar os pontos de controle
 CREATE TABLE IF NOT EXISTS "pontosDeControle"(
     id serial PRIMARY KEY,
-	points geometry(point, 4674) NULL,
-	"Tag" varchar NULL,
-	"Long" float NULL,
-	"Lat" float NULL,
+    points geometry(point, 4674) NULL,
+    "Tag" varchar NULL,
+    "Long" float NULL,
+    "Lat" float NULL,
     cnpj char(14) REFERENCES "LocalVoo"(cnpj),
-	idOrthomosaico int NULL,
+    idOrthomosaico int NULL,
     FOREIGN KEY (idOrthomosaico) REFERENCES orthomosaico (idOrthomosaico)  
 );
+
 
 -- Tabela principal, onde vamos armazenar informaçoes das imagens
 CREATE TABLE IF NOT EXISTS Imagem(
@@ -145,18 +165,22 @@ CREATE TABLE IF NOT EXISTS Imagem(
     idCamera int NOT NULL,
     idOrthomosaico int NULL,
     localidade_img GEOGRAPHY(POINT,4326) NULL,
-	FOREIGN KEY (CPF) REFERENCES Usuario (CPF),
+    FOREIGN KEY (CPF) REFERENCES Usuario (CPF),
     FOREIGN KEY (CPF_descricao) REFERENCES Usuario (CPF),
-	FOREIGN KEY (idVoo) REFERENCES "PlanoDeVoo" (idVoo),
-	FOREIGN KEY (idCamera) REFERENCES Camera (idCamera),
-	FOREIGN KEY (idOrthomosaico) REFERENCES orthomosaico (idOrthomosaico)   
+    FOREIGN KEY (idVoo) REFERENCES "PlanoDeVoo" (idVoo),
+    FOREIGN KEY (idCamera) REFERENCES Camera (idCamera),
+    FOREIGN KEY (idOrthomosaico) REFERENCES orthomosaico (idOrthomosaico)  
 ) ;
+
+
+
 
 
 
 ---------------------------------------------------------------------------------
 ---------------------- Procedures -----------------------------------------------
 ---------------------------------------------------------------------------------
+
 
 -- Proc insere usuario
 CREATE OR REPLACE PROCEDURE insere_usuario(CPF char(11), nome Nome, email varchar(50))
@@ -166,28 +190,33 @@ AS $$
 $$;
 
 
+
+
 -- Proc insere MembrosInterno
 CREATE OR REPLACE PROCEDURE MembrosInterno(matricula varchar(50), CPF2 char(11), nome Nome, email varchar(50))
 AS $$
-	BEGIN 
-	IF NOT EXISTS(SELECT * FROM usuario U WHERE U.cpf = CPF2) THEN 
-	CALL insere_usuario(CPF2, nome, email);
-	END IF;		
+    BEGIN
+    IF NOT EXISTS(SELECT * FROM usuario U WHERE U.cpf = CPF2) THEN
+    CALL insere_usuario(CPF2, nome, email);
+    END IF;    
     INSERT INTO MembrosInterno VALUES (matricula, CPF2);
-	END;
+    END;
 $$
 LANGUAGE plpgsql;
+
 
 -- Proc insere MembrosExterno
 CREATE OR REPLACE PROCEDURE MembrosExterno(CPF2 char(11), nome Nome, email varchar(50))
 AS $$
-BEGIN 
-	IF NOT EXISTS(SELECT * FROM usuario U WHERE U.cpf = CPF2) THEN 
-	CALL insere_usuario(CPF2, nome, email);
-	END IF;	
+BEGIN
+    IF NOT EXISTS(SELECT * FROM usuario U WHERE U.cpf = CPF2) THEN
+    CALL insere_usuario(CPF2, nome, email);
+    END IF;
     INSERT INTO MembrosExterno(CPF) VALUES (CPF2);
     end;
 $$ LANGUAGE plpgsql;
+
+
 
 
 -- Proc insere pesquisador
@@ -199,14 +228,18 @@ BEGIN
     else
         RAISE NOTICE 'Não é possivel adicionar um pesquisadoor que já é bolsista';
     end if;
-    
+   
 END;
 $$ LANGUAGE plpgsql;
 
 
 
 
--- Proc insere bolsista 
+
+
+
+
+-- Proc insere bolsista
 CREATE
 OR REPLACE procedure insere_bolsista(
     CPF2 varchar(11),
@@ -237,28 +270,34 @@ $$ LANGUAGE plpgsql;
 
 
 
+
+
+
 -- Proc insere camera
-CREATE OR REPLACE PROCEDURE insere_camera(	marca varchar(100),
-											lente varchar(100),
-											modelo varchar(100),
-											larguraPixels int,
-											alturaPixels int,
-											codigoSerial int)
+CREATE OR REPLACE PROCEDURE insere_camera(  marca varchar(100),
+                                            lente varchar(100),
+                                            modelo varchar(100),
+                                            larguraPixels int,
+                                            alturaPixels int,
+                                            codigoSerial int)
     LANGUAGE SQL
     AS $$
-        INSERT INTO Camera(	marca,
-							lente,
-							modelo,
-							larguraPixels,
-							alturaPixels,
-							codigoSerial)
-							VALUES (marca,
+        INSERT INTO Camera( marca,
+                            lente,
+                            modelo,
+                            larguraPixels,
+                            alturaPixels,
+                            codigoSerial)
+                            VALUES (marca,
                                     lente,
                                     modelo,
                                     larguraPixels,
                                     alturaPixels,
                                     codigoSerial);
 $$;
+
+
+
 
 
 
@@ -273,6 +312,8 @@ AS $$
 $$;
 
 
+
+
 -- Proc insere PlanoDeVoo
 CREATE OR REPLACE PROCEDURE insere_planodevoo ( cnpj char(14),
                                                 altitude float,
@@ -282,16 +323,17 @@ CREATE OR REPLACE PROCEDURE insere_planodevoo ( cnpj char(14),
 LANGUAGE SQL
 AS $$
     INSERT INTO "PlanoDeVoo"( altitude,
-							gsd,
-							arquivoAgisoft,
-							localidade,
+                            gsd,
+                            arquivoAgisoft,
+                            localidade,
                             cnpj)
-							VALUES ( altitude,
-							gsd,
-							arquivoAgisoft,
-							localidade,
+                            VALUES ( altitude,
+                            gsd,
+                            arquivoAgisoft,
+                            localidade,
                             cnpj)
 $$;
+
 
 -- Proc insere pontos de controle
 CREATE OR REPLACE PROCEDURE insere_pontos_de_controle(points geometry(point, 4674),
@@ -317,9 +359,10 @@ INSERT INTO "pontosDeControle"(points,
                                 idOrthomosaico)
 $$;
 
+
 -- Proc insere orthomosaico
 CREATE OR REPLACE PROCEDURE insere_orthomosaico(imagemOrtho bytea,
-                                                arquivoGis bytea, 
+                                                arquivoGis bytea,
                                                 descricao varchar(256))
 LANGUAGE SQL
 AS $$
@@ -330,6 +373,7 @@ INSERT INTO orthomosaico(   imagemOrtho,
                                     arquivoGis,
                                     descricao)
 $$;
+
 
 -- Proc insere imagem
 CREATE OR REPLACE PROCEDURE insere_Imagem(
@@ -356,27 +400,31 @@ INSERT INTO Imagem( imagem,
 $$;
 
 
+
+
 -- Atualiza com a descrição e quem a colocou a descrição
 CREATE OR REPLACE PROCEDURE atualiza_descricao_Imagem(
-	idImagemP int,
-	descricaoP varchar(256),
+    idImagemP int,
+    descricaoP varchar(256),
     CPF_descricaoP char(11))
 LANGUAGE SQL
 AS $$
-	UPDATE Imagem SET descricao = descricaoP, CPF_descricao = CPF_descricaoP WHERE idImagem = idImagemP;
+    UPDATE Imagem SET descricao = descricaoP, CPF_descricao = CPF_descricaoP WHERE idImagem = idImagemP;
 $$;
+
 
 -- Atualiza com o id do orthomosaico que ela participa
 CREATE OR REPLACE PROCEDURE atualiza_Orthomosaico_da_Imagem(
-	idImagemP int,
-	idOrthomosaicoP int)
+    idImagemP int,
+    idOrthomosaicoP int)
 LANGUAGE SQL
 AS $$
-	UPDATE Imagem SET idOrthomosaico = idOrthomosaicoP WHERE idImagem = idImagemP;
+    UPDATE Imagem SET idOrthomosaico = idOrthomosaicoP WHERE idImagem = idImagemP;
 $$;
 -----------------------------------------------------------------------------
 ---------------- Functions -------------------------------------------------
 -----------------------------------------------------------------------------
+
 
 -----------------------------------------------------------------------------
 --------------- Verifica se o ponto está contido no poligono ---------------
@@ -384,6 +432,7 @@ CREATE OR REPLACE FUNCTION confere_ponto_cidade (
     id_ponto INT,
     id_cidade INT
 )RETURNS boolean
+
 
 AS $$
 DECLARE
@@ -393,12 +442,14 @@ BEGIN
     FROM "Municipios_MT_2021" m
     JOIN pontos p ON ST_Contains(m.geom, p.geom)
     WHERE p.id = id_ponto and m.id = id_cidade;
-	RETURN CASE
+    RETURN CASE
         WHEN pertence THEN true
         ELSE false
     END;
 END;
 $$ LANGUAGE plpgsql;
+
+
 
 
 -----------------------------------------------------------------------------
@@ -407,21 +458,23 @@ CREATE OR REPLACE FUNCTION encontra_ponto_por_cidade (
     id_cidade INT
 )RETURNS SETOF geometry
 
+
 AS $$
 DECLARE
 pontos geometry;
-BEGIN FOR pontos IN 
+BEGIN FOR pontos IN
     SELECT p.geom
     FROM "Municipios_MT_2021" m
     JOIN pontos p ON ST_Contains(m.geom, p.geom)
     WHERE m.id = id_cidade
-	LOOP
-	RETURN NEXT pontos;
-	END LOOP;
-    
-	RETURN;
+    LOOP
+    RETURN NEXT pontos;
+    END LOOP;
+   
+    RETURN;
 END;
 $$ LANGUAGE plpgsql;
+
 
 -----------------------------------------------------------------------------
 --------------- Encontra a cidade através de um ponto ---------------
@@ -429,15 +482,17 @@ CREATE OR REPLACE FUNCTION encontra_cidade (
     id_ponto INT
 )RETURNS text
 
+
 AS $$
 DECLARE
 nome_cidade text;
 BEGIN
+
+
     SELECT m.nm_mun INTO nome_cidade
     FROM "Municipios_MT_2021" m
     JOIN pontos p ON ST_Contains(m.geom, p.geom)
     WHERE p.id = id_ponto;
-	RETURN nome_cidade;
+    RETURN nome_cidade;
 END;
 $$ LANGUAGE plpgsql;
-
