@@ -5,9 +5,8 @@ import os
 # Conecta ao banco de dados
 conn = psycopg2.connect(
     "dbname=geoDatabase user=postgres password=postgis host=localhost")
-# print(conn)
 
-############################################### Init ###############################################
+
 print('\n\nBem Vindo ao Sistemas de Gerenciamento de dados Georeferênciados!')
 
 
@@ -26,7 +25,6 @@ def cadastrarUsuario():
         res = int(res)
         if (res == 1):
             with conn.cursor() as cur:
-                # cur.execute("CALL MembrosInterno('123456', '12345678905', ('Maria', 'doBairro'), 'televisa@tlv.com')")
                 nome = input('Digite o nome do usuário: ')
                 sobrenome = input('Digite o sobrenome do usuário: ')
                 cpf = input('Digite o CPF do NOVO usuário: ')
@@ -107,11 +105,9 @@ def planoDeVoo():
     cnpj = input('\nDigite o CNPJ do Local: ')
     altitude = float(input('Altitude do Voo: '))
     gsd = float(input('Qual o GSD estimado: '))
-    # ./python/docs/Mission_Acadepol.json
     diretorio = input('Entre com o diretório da arquivo:')
     with open(diretorio, "rb") as f:
         arquivo = f.read()
-    # -15.611358604748503, -56.008489726580976
     lat = float(input('Entre com o valor da latitude do local: '))
     log = float(input('Entre com o valor da longitude do local: '))
     with conn.cursor() as cur:
@@ -121,7 +117,6 @@ def planoDeVoo():
 
 
 def defineLocal():
-    #    INSERT INTO Local_Voo VALUES (cnpj, nome);
     print('Local de Voo')
     nome = input('Insira o nome do Local do Voo: ')
     cnpj = input('Informe o CNPJ: ')
@@ -129,15 +124,13 @@ def defineLocal():
     dataDaCampanha = input('Insira a data da campanha: ')
     with conn.cursor() as cur:
         try:
-            cur.execute('CALL insere_local(%s, %s, %s, %s)', (cnpj, nome, campanha, dataDaCampanha))
+            cur.execute('CALL insere_local(%s, %s, %s, %s)',
+                        (cnpj, nome, campanha, dataDaCampanha))
             conn.commit()
         except psycopg2.Error as e:  # Se ocorrer um erro, exibe a mensagem de erro e faz o rollback da transação
             print("Ocorreu um erro:", e)
             conn.rollback()
 
-# Operações de busca sobre o georeferenciamento
-# Indexação e consultas
-# Consulta não pelos dados textuais
 
 def imagens():
     from exif import Image
@@ -178,9 +171,11 @@ def imagens():
                         lat = lat[2]
                         log = img.get('gps_longitude')
                         log = log[2]
-                        coordenada = "ST_GeographyFromText('POINT(%s %s)')",(lat, log)
+                        coordenada = "ST_GeographyFromText('POINT(%s %s)')", (
+                            lat, log)
                         dataHora = img.get('datetime_original')
-                        dataHora = dataHora[:10].replace(':', '-') + dataHora[10:]
+                        dataHora = dataHora[:10].replace(
+                            ':', '-') + dataHora[10:]
                     else:
                         DateSys = datetime.datetime.now()
                         dataHora = DateSys.strftime('%Y-%m-%d %H:%M:%S')
@@ -194,14 +189,17 @@ def imagens():
 def test():
     import csv
     print('Inserir Orthomosaico')
-    diretorioOrthomosaico = input('\nInsira o diretório com o nome do arquivo do Orthomosaico: ')
+    diretorioOrthomosaico = input(
+        '\nInsira o diretório com o nome do arquivo do Orthomosaico: ')
     with open(diretorioOrthomosaico, "rb") as arq1:
-        imagemOrthomosaico = arq1.read() # C:\Users\phcmo\OneDrive\Doutorado\2022_2\DBNC\Project\python\ortho\Ortho-Preview.tif
-    ditetorioArquivoGis = input('Insira o diretório com o nome do arquivo do Arquivo GIS: ')
+        imagemOrthomosaico = arq1.read()
+    ditetorioArquivoGis = input(
+        'Insira o diretório com o nome do arquivo do Arquivo GIS: ')
     with open(ditetorioArquivoGis, "rb") as arq2:
-        arquivoGis = arq2.read() #C:\Users\phcmo\OneDrive\Doutorado\2022_2\DBNC\Project\python\gis\TestDB.qgz
+        arquivoGis = arq2.read()
 
-    descrição = input('Escreva algum comentário sobre a imagem, caso contrário deixe vazio: ')
+    descrição = input(
+        'Escreva algum comentário sobre a imagem, caso contrário deixe vazio: ')
     with conn.cursor() as cur:
         cur.execute("CALL insere_orthomosaico(%s, %s, %s)",
                     (imagemOrthomosaico, arquivoGis, descrição))
@@ -215,29 +213,32 @@ def test():
             with conn.cursor() as cur:
                 cur.execute('SELECT idorthomosaico FROM orthomosaico')
                 list_local_voo = cur.fetchall()
-            diretorioCsv = input('\nInsira o "diretório + nome_do_arquivo" csv dos pontos GPS: ')
+            diretorioCsv = input(
+                '\nInsira o "diretório + nome_do_arquivo" csv dos pontos GPS: ')
             with open(diretorioCsv) as arquivo_csv:
                 pontos = csv.reader(arquivo_csv, newline='')
                 print(pontos)
-        elif (res == 2): return
-        else: return
+        elif (res == 2):
+            return
+        else:
+            return
 
 
-def test2(idortho = None):
+def test2(idortho=None):
     import pandas as pd
     cnpj = '12345678912301'
     diretorioCsv = 'C:\\Users\\phcmo\\OneDrive\\Doutorado\\2022_2\\DBNC\\Project\\python\\points\\Sorriso.csv'
     with open(diretorioCsv) as arquivo_csv:
-                pontos = pd.read_csv(arquivo_csv,header=None)
+        pontos = pd.read_csv(arquivo_csv, header=None)
     for i in range(len(pontos)):
         tag = pontos.iloc[i, 0]
         lon = pontos.iloc[i, 1]
         lat = pontos.iloc[i, 2]
         with conn.cursor() as cur:
-            #CALL insere_pontos_de_controle(ST_MakePoint(-71.064544, 42.28787), 'Tag', -55.83811386, -12.76162787, '12345678912301',Null);
             cur.execute("CALL insere_pontos_de_controle(ST_MakePoint(%s, %s), %s, %s, %s, %s, %s)",
                         (lon, lat, tag, lon, lat, cnpj, idortho))
             conn.commit()
+
 
 def test3():
     import rasterio
@@ -250,7 +251,8 @@ def test3():
 
         # Cria uma nova tabela no PostGIS para armazenar o raster
         with conn.cursor() as cur:
-            cur.execute("CREATE TABLE t_raster (rid serial PRIMARY KEY, rast raster)")
+            cur.execute(
+                "CREATE TABLE t_raster (rid serial PRIMARY KEY, rast raster)")
             conn.commit()
 
         # Carrega o conteúdo do arquivo raster para o PostGIS
@@ -270,7 +272,6 @@ def test3():
 
     # Fecha a conexão com o banco de dados PostGIS
     conn.close()
-
 
 
 ######################################################### MENU PRINCIPAL #########################################################
